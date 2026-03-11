@@ -6,6 +6,9 @@ from contig_extractor import extract_contigs
 from metrics import compute_metrics
 from plotter import plot_lengths
 
+ENABLE_GRAPH_VISUALIZATION = False
+MAX_VISUALIZATION_READS = 200
+
 file_path = "dataset/sample.fastq"
 k = 21
 
@@ -48,3 +51,44 @@ print("N50:", n50)
 plot_lengths(lengths)
 
 print("\n--- Pipeline Complete ---")
+
+
+# -----------------------------
+# Optional Graph Visualization
+# -----------------------------
+
+if ENABLE_GRAPH_VISUALIZATION:
+
+    import itertools
+    import networkx as nx
+    import matplotlib.pyplot as plt
+
+    print("\n--- Safe Graph Visualization ---")
+
+    small_reads = list(itertools.islice(load_reads(file_path), MAX_VISUALIZATION_READS))
+
+    small_kmers, _ = count_kmers(small_reads, k)
+
+    small_graph = build_graph(small_kmers, k)
+
+    print("Visualization graph nodes:", small_graph.number_of_nodes())
+    print("Visualization graph edges:", small_graph.number_of_edges())
+
+    plt.figure(figsize=(10,8))
+
+    pos = nx.spring_layout(small_graph)
+
+    nx.draw(
+        small_graph,
+        pos,
+        node_size=30,
+        node_color="blue",
+        edge_color="gray",
+        with_labels=False
+    )
+
+    plt.title("Sample de Bruijn Graph")
+
+    plt.savefig("output/debruijn_graph_sample.png")
+
+    print("Graph visualization saved.")
